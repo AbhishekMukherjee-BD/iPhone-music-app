@@ -323,11 +323,14 @@
               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
             </svg>
           </div>
-          <p class="import-hint">Select a song from your device. It will be added to your library and queued up automatically.</p>
-          <button id="btn-modal-file-trigger" class="btn-import-action glass-button">
-            Choose Song File
+          <p class="import-hint">Select audio files from your device.<br>They'll be added to your library &amp; queued automatically.</p>
+          <button id="btn-modal-file-trigger" class="btn-import-action" type="button">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
+            </svg>
+            Import Song
           </button>
-          <input type="file" id="modal-file-input" accept="audio/*" class="hidden" multiple>
+          <input type="file" id="modal-file-input" accept="audio/mp3,audio/mpeg,audio/x-m4a,audio/m4a,audio/wav,audio/x-wav" style="display: none;" multiple>
         </div>
       </div>
     </div>
