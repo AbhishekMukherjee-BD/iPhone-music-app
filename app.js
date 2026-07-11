@@ -298,10 +298,41 @@ async function loadLibrary() {
   }
 }
 
+function attachSwipeToDelete(item) {
+  let startX = 0, currentX = 0, swiping = false;
+  
+  item.addEventListener('touchstart', e => {
+    startX = e.touches[0].clientX;
+    swiping = true;
+    item.style.transition = 'none';
+  }, { passive: true });
+  
+  item.addEventListener('touchmove', e => {
+    if (!swiping) return;
+    const diff = e.touches[0].clientX - startX;
+    currentX = Math.min(0, diff);
+    item.style.transform = `translateX(${Math.max(currentX, -100)}px)`;
+  }, { passive: true });
+  
+  item.addEventListener('touchend', () => {
+    swiping = false;
+    item.style.transition = 'transform 0.3s var(--easing-spring)';
+    if (currentX < -60) {
+      item.style.transform = 'translateX(-80px)';
+    } else {
+      item.style.transform = 'translateX(0)';
+    }
+  });
+}
+
 function renderSongsList(songsToRender) {
-  // Clear previous list, leaving empty state container
-  const items = songsList.querySelectorAll('.song-item');
+  // Clear previous list wrappers
+  const items = songsList.querySelectorAll('.song-row-wrapper');
   items.forEach(el => el.remove());
+
+  // Also clear any legacy direct song-items
+  const legacyItems = songsList.querySelectorAll('.song-item');
+  legacyItems.forEach(el => el.remove());
 
   if (songsToRender.length === 0) {
     emptyState.style.display = 'flex';
@@ -311,6 +342,9 @@ function renderSongsList(songsToRender) {
   emptyState.style.display = 'none';
 
   songsToRender.forEach(track => {
+    const rowWrapper = document.createElement('div');
+    rowWrapper.className = 'song-row-wrapper';
+
     const songItem = document.createElement('div');
     songItem.className = 'song-item';
     songItem.dataset.id = track.id;
@@ -318,11 +352,16 @@ function renderSongsList(songsToRender) {
       songItem.classList.add('active');
     }
 
-    // Artwork Element
     let artworkImg = `<div class="song-artwork flex-center"><svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20" style="opacity: 0.5;"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg></div>`;
     if (track.artwork) {
       artworkImg = `<img src="${track.artwork}" alt="Art" class="song-artwork">`;
     }
+
+    rowWrapper.innerHTML = `
+      <button class="delete-action-btn" data-id="${track.id}" aria-label="Delete">
+        Delete
+      </button>
+    `;
 
     songItem.innerHTML = `
       ${artworkImg}
@@ -330,26 +369,23 @@ function renderSongsList(songsToRender) {
         <div class="song-title">${escapeHTML(track.title)}</div>
         <div class="song-artist">${escapeHTML(track.artist)}</div>
       </div>
-      <div class="song-action-container">
-        <button class="btn-icon delete-song-btn" data-id="${track.id}" aria-label="Delete Song">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
-            <path d="M3 6h18M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2M10 11v6M14 11v6"/>
-          </svg>
-        </button>
-      </div>
     `;
 
-    // Click handler to play track
-    songItem.addEventListener('click', (e) => {
-      // If click on delete button, do not play
-      if (e.target.closest('.delete-song-btn')) return;
-      
+    rowWrapper.appendChild(songItem);
+
+    // Click handler to play track or collapse swipe state
+    songItem.addEventListener('click', () => {
+      if (songItem.style.transform && songItem.style.transform !== 'translateX(0px)') {
+        songItem.style.transition = 'transform 0.3s var(--easing-spring)';
+        songItem.style.transform = 'translateX(0)';
+        return;
+      }
       unlockAudioContext();
       playTrackById(track.id);
     });
 
-    // Swipe / delete song handler
-    const deleteBtn = songItem.querySelector('.delete-song-btn');
+    // Delete button click action
+    const deleteBtn = rowWrapper.querySelector('.delete-action-btn');
     deleteBtn.addEventListener('click', async (e) => {
       e.stopPropagation();
       if (confirm(`Remove "${track.title}" from your library?`)) {
@@ -357,7 +393,10 @@ function renderSongsList(songsToRender) {
       }
     });
 
-    songsList.appendChild(songItem);
+    // Attach touch gesture swipe handler
+    attachSwipeToDelete(songItem);
+
+    songsList.appendChild(rowWrapper);
   });
 }
 
@@ -757,39 +796,34 @@ function initMediaSessionActions() {
 /* ==========================================================================
    UI SHEET DRAG & PAN GESTURE (NATIVE SHEET DISMISS FEEL)
    ========================================================================== */
-let startY = 0;
-let currentY = 0;
-let isDragging = false;
+let panelStartY = 0, panelCurrentY = 0, panelLastY = 0, panelLastT = 0, panelVelocity = 0;
 
 panelCloseTrigger.addEventListener('touchstart', (e) => {
-  startY = e.touches[0].clientY;
-  isDragging = true;
-  playerPanel.style.transition = 'none'; // Disable animations while dragging
+  panelStartY = e.touches[0].clientY;
+  panelLastY = panelStartY;
+  panelLastT = performance.now();
+  playerPanel.style.transition = 'none';
 }, { passive: true });
 
 panelCloseTrigger.addEventListener('touchmove', (e) => {
-  if (!isDragging) return;
-  currentY = e.touches[0].clientY;
-  const diffY = currentY - startY;
-  
-  if (diffY > 0) {
-    playerPanel.style.transform = `translateY(${diffY}px)`;
-  }
+  const y = e.touches[0].clientY;
+  const now = performance.now();
+  let diff = y - panelStartY;
+  if (diff < 0) diff = diff / 4; // rubber-band resistance when dragging upward past top
+  panelVelocity = (y - panelLastY) / Math.max(1, now - panelLastT);
+  panelLastY = y;
+  panelLastT = now;
+  panelCurrentY = diff;
+  playerPanel.style.transform = `translateY(${diff}px)`;
 }, { passive: true });
 
 panelCloseTrigger.addEventListener('touchend', () => {
-  if (!isDragging) return;
-  isDragging = false;
-  
-  const diffY = currentY - startY;
-  playerPanel.style.transition = 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)';
-  
-  if (diffY > 120) {
-    // Dragged down far enough to dismiss
+  playerPanel.style.transition = '';
+  const shouldDismiss = panelCurrentY > 120 || panelVelocity > 0.6;
+  if (shouldDismiss) {
     minimizePlayerPanel();
   } else {
-    // Snap back up
-    playerPanel.style.transform = 'translateY(0)';
+    playerPanel.style.transform = '';
   }
 });
 
@@ -1333,7 +1367,7 @@ function escapeHTML(str) {
 function showToast(message) {
   const container = document.getElementById('toast-container');
   const toast = document.createElement('div');
-  toast.className = 'toast';
+  toast.className = 'toast glass glass-clear';
   toast.textContent = message;
   
   container.appendChild(toast);

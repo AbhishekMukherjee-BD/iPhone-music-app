@@ -1,4 +1,4 @@
-const CACHE_NAME = 'auraplayer-v4';
+const CACHE_NAME = 'auraplayer-v5';
 const ASSETS_TO_CACHE = [
   'index.html',
   'app.css',

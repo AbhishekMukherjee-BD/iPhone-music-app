@@ -24,6 +24,15 @@
   <link rel="stylesheet" href="app.css">
 </head>
 <body>
+  <!-- Lensing SVG Filter for Liquid Glass Refraction -->
+  <svg style="display:none">
+    <filter id="lg-lens" x="-20%" y="-20%" width="140%" height="140%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.008 0.012" numOctaves="2" seed="7" result="noise"/>
+      <feGaussianBlur in="noise" stdDeviation="3" result="blurredNoise"/>
+      <feDisplacementMap in="SourceGraphic" in2="blurredNoise" scale="18" xChannelSelect="R" yChannelSelect="G"/>
+    </filter>
+  </svg>
+
   <!-- Status bar background for iOS safe area -->
   <div class="ios-status-bar-spacer"></div>
 
@@ -84,7 +93,7 @@
     </main>
 
     <!-- Mini Player (Pinned Bottom) -->
-    <div class="mini-player hidden" id="mini-player">
+    <div class="mini-player glass glass-lens hidden" id="mini-player">
       <div class="mini-player-content">
         <div class="mini-artwork-container">
           <img src="" alt="Album Art" id="mini-artwork" class="mini-artwork">
@@ -113,7 +122,7 @@
     </div>
 
     <!-- Full Screen Player Panel (Slide-up) -->
-    <div class="player-panel" id="player-panel">
+    <div class="player-panel glass" id="player-panel">
       <!-- Handle to drag down / collapse -->
       <div class="panel-handle-container" id="panel-close-trigger">
         <div class="panel-handle"></div>
@@ -164,7 +173,7 @@
         </div>
 
         <!-- Primary Controls (Prev, Play, Next) -->
-        <div class="player-controls">
+        <div class="player-controls glass" id="controls-group">
           <!-- Shuffle Button -->
           <button id="btn-shuffle" class="btn-icon btn-secondary-control" aria-label="Shuffle">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -255,7 +264,7 @@
 
   <!-- Add to Queue Selector Modal -->
   <div class="modal-overlay hidden" id="queue-select-modal">
-    <div class="modal-content glass-modal">
+    <div class="modal-content glass glass-clear">
       <div class="modal-header">
         <h3>Add to Queue</h3>
         <button id="btn-modal-close" class="btn-icon" aria-label="Close Modal">

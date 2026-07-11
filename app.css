@@ -33,15 +33,84 @@
   --border-color: oklch(100% 0 0 / 12%); /* Specular glass border */
   --border-color-inner: oklch(100% 0 0 / 6%);
   --shadow-primary: 0 12px 40px rgba(0, 0, 0, 0.5), 0 0 20px rgba(212, 175, 55, 0.05);
+
+  /* Layered glass tiers (Apple uses "regular" vs "clear") */
+  --glass-regular-bg: oklch(22% 0.02 250 / 55%);
+  --glass-clear-bg: oklch(30% 0.02 250 / 20%);
+  --glass-blur: blur(28px) saturate(200%) brightness(1.05);
+  --glass-border: linear-gradient(135deg, rgba(255,255,255,0.35), rgba(255,255,255,0.05) 40%, rgba(255,255,255,0.15));
+  --glass-specular: linear-gradient(120deg, rgba(255,255,255,0.25) 0%, rgba(255,255,255,0) 35%, rgba(255,255,255,0.08) 60%, rgba(255,255,255,0) 100%);
+  --glass-shadow: 0 8px 32px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.08);
   
   /* Radii */
   --border-radius-lg: 24px;
   --border-radius-md: 16px;
   --border-radius-sm: 8px;
   
-  /* Motion & Physical Easing Curves */
-  --easing-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  /* Motion & Physical Easing Curves (Matched closer to native iOS springs) */
+  --easing-spring: cubic-bezier(0.36, 1.4, 0.4, 1);
+  --easing-spring-soft: cubic-bezier(0.22, 1, 0.36, 1);
   --easing-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ==========================================================================
+   UNIVERSAL REUSABLE GLASS UTILITIES
+   ========================================================================== */
+.glass {
+  position: relative;
+  background: var(--glass-regular-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border-radius: inherit;
+  box-shadow: var(--glass-shadow);
+  overflow: hidden;
+  isolation: isolate;
+}
+
+/* Border highlight ring (specular glass edge highlight) */
+.glass::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: var(--glass-border);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* Specular sweep drift animation */
+.glass::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--glass-specular);
+  background-size: 250% 250%;
+  animation: specularDrift 9s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 1;
+  mix-blend-mode: overlay;
+}
+
+@keyframes specularDrift {
+  0%   { background-position: 0% 0%; }
+  50%  { background-position: 100% 100%; }
+  100% { background-position: 0% 0%; }
+}
+
+/* Optical displacement lensing filter */
+.glass-lens {
+  filter: url(#lg-lens);
+}
+
+/* Light transparent tier 2 glass variant */
+.glass-clear {
+  background: var(--glass-clear-bg);
+  backdrop-filter: blur(16px) saturate(160%);
+  -webkit-backdrop-filter: blur(16px) saturate(160%);
 }
 
 /* Specific Logo Typography Styling */
@@ -322,10 +391,8 @@ body {
   display: flex;
   align-items: center;
   padding: 10px;
-  background-color: var(--card-glass);
-  backdrop-filter: var(--card-blur);
-  -webkit-backdrop-filter: var(--card-blur);
-  border: 1px solid var(--border-color);
+  background-color: oklch(22% 0.02 250 / 60%);
+  border: 1px solid var(--border-color-inner);
   border-radius: var(--border-radius-md);
   cursor: pointer;
   transition: transform 0.2s var(--easing-spring), background-color 0.2s var(--easing-smooth), border-color 0.2s var(--easing-smooth);
@@ -421,23 +488,17 @@ body {
    MINI PLAYER (Pinned Bottom)
    ========================================================================== */
 .mini-player {
+  border-radius: var(--border-radius-md);
+  height: 64px;
   position: absolute;
   bottom: calc(env(safe-area-inset-bottom, 20px) + var(--spacing-xs));
   left: var(--spacing-sm);
   right: var(--spacing-sm);
-  height: 64px;
-  background-color: var(--card-glass);
-  backdrop-filter: var(--card-blur);
-  -webkit-backdrop-filter: var(--card-blur);
-  border: 1px solid var(--border-color);
-  border-radius: var(--border-radius-md);
-  box-shadow: var(--shadow-primary);
+  transition: transform 0.4s var(--easing-spring), opacity 0.3s ease;
+  z-index: 10;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  overflow: hidden;
-  z-index: 10;
-  transition: transform 0.3s var(--easing-smooth), opacity 0.3s ease;
 }
 
 .mini-player.hidden {
@@ -562,20 +623,13 @@ body {
    ========================================================================== */
 .player-panel {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  background-color: var(--card-glass);
-  backdrop-filter: var(--card-blur);
-  -webkit-backdrop-filter: var(--card-blur);
-  border-top: 1px solid var(--border-color);
+  inset: 0;
   z-index: 100;
   display: flex;
   flex-direction: column;
   transform: translateY(100%);
   opacity: 0;
-  transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s ease;
+  transition: transform 0.5s var(--easing-spring-soft), opacity 0.4s ease;
   padding-top: env(safe-area-inset-top, 44px);
   padding-bottom: env(safe-area-inset-bottom, 20px);
 }
@@ -584,10 +638,6 @@ body {
 .player-panel.active {
   transform: translateY(0);
   opacity: 1;
-}
-
-.player-panel-active .player-panel {
-  background: radial-gradient(circle at top, oklch(80% 0.12 85 / 10%) 0%, oklch(14% 0.015 250 / 92%) 100%);
 }
 
 .panel-handle-container {
@@ -780,14 +830,14 @@ body {
   border-radius: 50%;
   background-color: var(--text-primary);
   cursor: pointer;
-  transition: transform 0.15s ease, background-color 0.2s ease;
+  transition: transform 0.2s var(--easing-spring), background-color 0.2s ease, box-shadow 0.2s ease;
   box-shadow: 0 1px 4px rgba(0,0,0,0.5);
 }
 
-/* Make it larger when interacting */
 .custom-slider:active::-webkit-slider-thumb {
-  transform: scale(1.8);
+  transform: scale(2.2);
   background-color: var(--accent);
+  box-shadow: 0 0 0 8px oklch(80% 0.12 85 / 15%); /* soft halo, like iOS scrubbing */
 }
 
 .time-stamps {
@@ -808,6 +858,14 @@ body {
   justify-content: space-between;
   width: 100%;
   margin-bottom: var(--spacing-md);
+}
+
+.player-controls.glass {
+  padding: 8px 16px;
+  border-radius: 999px;
+  gap: 4px;
+  width: fit-content;
+  margin: 0 auto var(--spacing-md) auto;
 }
 
 .btn-control {
@@ -1492,5 +1550,48 @@ body {
 
 .btn-import-action:active {
   transform: scale(0.95);
+}
+
+/* ==========================================================================
+   SWIPE TO DELETE STYLES
+   ========================================================================== */
+.song-row-wrapper {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--border-radius-md);
+  width: 100%;
+}
+
+.delete-action-btn {
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 80px;
+  background-color: oklch(62% 0.22 17); /* Rich iOS Red */
+  color: var(--text-primary);
+  border: none;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 1;
+  border-top-right-radius: var(--border-radius-md);
+  border-bottom-right-radius: var(--border-radius-md);
+  box-shadow: inset 4px 0 10px rgba(0, 0, 0, 0.15);
+  transition: background-color 0.2s ease;
+}
+
+.delete-action-btn:hover {
+  background-color: oklch(55% 0.22 17);
+}
+
+.song-row-wrapper .song-item {
+  position: relative;
+  z-index: 2;
+  background-color: oklch(14% 0.015 250); /* Opaque slate container background to cover red button */
 }
 
