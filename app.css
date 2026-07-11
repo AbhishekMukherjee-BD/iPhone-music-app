@@ -1588,6 +1588,16 @@ body {
   margin-bottom: var(--spacing-lg);
 }
 
+#modal-file-input {
+  display: none !important;
+  visibility: hidden;
+  position: absolute;
+  width: 0;
+  height: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
 .btn-import-action {
   display: inline-flex;
   align-items: center;
