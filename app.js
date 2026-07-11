@@ -592,6 +592,7 @@ function updatePlaybackUI() {
 }
 
 // Synchronize timeline sliders during play tick
+let lastPositionUpdate = 0;
 audio.addEventListener('timeupdate', () => {
   if (isNaN(audio.duration)) return;
   
@@ -610,13 +611,18 @@ audio.addEventListener('timeupdate', () => {
   sliderTrackFill.style.width = `${pct}%`;
   miniProgressFill.style.width = `${pct}%`;
   
-  // Update iOS Media Session Position state
-  if ('mediaSession' in navigator) {
-    navigator.mediaSession.setPositionState({
-      duration: duration,
-      playbackRate: audio.playbackRate,
-      position: current
-    });
+  // Throttle mediaSession position updates to once per second
+  if ('mediaSession' in navigator && (Math.abs(current - lastPositionUpdate) >= 1.0)) {
+    try {
+      navigator.mediaSession.setPositionState({
+        duration: duration,
+        playbackRate: audio.playbackRate || 1.0,
+        position: current
+      });
+      lastPositionUpdate = current;
+    } catch (err) {
+      // Ignore momentarily mismatching state errors
+    }
   }
 });
 
@@ -707,6 +713,12 @@ function updateMediaSession(track) {
     album: 'Local Storage',
     artwork: artworkInfo
   });
+
+  // Re-register actions on track change to maintain lock screen focus
+  initMediaSessionActions();
+
+  // Sync playbackState state
+  navigator.mediaSession.playbackState = isPlaying ? 'playing' : 'paused';
 }
 
 function initMediaSessionActions() {
@@ -724,6 +736,15 @@ function initMediaSessionActions() {
   navigator.mediaSession.setActionHandler('nexttrack', () => {
     nextTrack();
   });
+
+  // Nullify seekforward/seekbackward to prevent iOS from overriding track controls with 15s skip buttons
+  try {
+    navigator.mediaSession.setActionHandler('seekforward', null);
+    navigator.mediaSession.setActionHandler('seekbackward', null);
+  } catch (err) {
+    console.warn('MediaSession seek action overrides not fully supported:', err);
+  }
+
   navigator.mediaSession.setActionHandler('seekto', (details) => {
     if (details.fastSeek && 'fastSeek' in audio) {
       audio.fastSeek(details.seekTime);
