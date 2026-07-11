@@ -264,14 +264,47 @@
           </svg>
         </button>
       </div>
-      <div class="modal-search-container">
-        <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
-        </svg>
-        <input type="search" id="modal-search-input" placeholder="Search songs...">
+      
+      <!-- Segmented Buttons Bar (iOS style Segmented Control) -->
+      <div class="modal-segmented-control-container">
+        <div class="modal-segmented-control">
+          <div class="segmented-slider" id="segmented-slider"></div>
+          <button id="btn-choose-imported" class="segmented-btn active" type="button">
+            Library
+          </button>
+          <button id="btn-import-new" class="segmented-btn" type="button">
+            Import New
+          </button>
+        </div>
       </div>
-      <div class="modal-list" id="modal-songs-list">
-        <!-- Songs will be rendered here dynamically with a "+" button -->
+
+      <!-- Tab Content 1: Choose from Library -->
+      <div class="tab-content" id="content-choose-imported">
+        <div class="modal-search-container">
+          <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
+          </svg>
+          <input type="search" id="modal-search-input" placeholder="Search songs...">
+        </div>
+        <div class="modal-list" id="modal-songs-list">
+          <!-- Songs will be rendered here dynamically with a "+" button -->
+        </div>
+      </div>
+
+      <!-- Tab Content 2: Import New Song -->
+      <div class="tab-content hidden" id="content-import-new">
+        <div class="modal-import-placeholder">
+          <div class="import-glow-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="36" height="36">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
+            </svg>
+          </div>
+          <p class="import-hint">Select a song from your device. It will be added to your library and queued up automatically.</p>
+          <button id="btn-modal-file-trigger" class="btn-import-action glass-button">
+            Choose Song File
+          </button>
+          <input type="file" id="modal-file-input" accept="audio/*" class="hidden" multiple>
+        </div>
       </div>
     </div>
   </div>

@@ -67,6 +67,15 @@ const modalCloseBtn = document.getElementById('btn-modal-close');
 const modalSearchInput = document.getElementById('modal-search-input');
 const modalSongsList = document.getElementById('modal-songs-list');
 
+// Segmented Controls and Direct Import inside Modal
+const btnChooseImported = document.getElementById('btn-choose-imported');
+const btnImportNew = document.getElementById('btn-import-new');
+const segmentedSlider = document.getElementById('segmented-slider');
+const contentChooseImported = document.getElementById('content-choose-imported');
+const contentImportNew = document.getElementById('content-import-new');
+const btnModalFileTrigger = document.getElementById('btn-modal-file-trigger');
+const modalFileInput = document.getElementById('modal-file-input');
+
 // SVG Elements inside Play/Pause Buttons
 const playSvgs = document.querySelectorAll('.play-svg, .play-svg-large');
 const pauseSvgs = document.querySelectorAll('.pause-svg, .pause-svg-large');
@@ -833,18 +842,24 @@ function renderQueueList() {
         <div class="queue-item-artist">${escapeHTML(track.artist)}</div>
       </div>
       ${isCurrent ? '<span class="queue-item-playing-badge">Currently Playing</span>' : ''}
-      <div class="queue-item-handle">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
-          <line x1="4" y1="9" x2="20" y2="9"></line>
-          <line x1="4" y1="15" x2="20" y2="15"></line>
+      <button class="btn-icon btn-queue-item-menu" data-index="${index}" aria-label="Song Menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="20" height="20">
+          <circle cx="12" cy="5" r="1.2"></circle>
+          <circle cx="12" cy="12" r="1.2"></circle>
+          <circle cx="12" cy="19" r="1.2"></circle>
         </svg>
-      </div>
+      </button>
     `;
 
     // Click to play directly from queue list
     item.addEventListener('click', (e) => {
-      if (e.target.closest('.queue-item-handle')) return; // ignore handle dragging tap
+      if (e.target.closest('.btn-queue-item-menu')) return; // ignore menu clicks in standard item play click
       loadAndPlayTrack(index);
+    });
+
+    const menuBtn = item.querySelector('.btn-queue-item-menu');
+    menuBtn.addEventListener('click', (e) => {
+      showQueueItemDropdown(e, index);
     });
 
     setupQueueDragEvents(item);
@@ -852,23 +867,131 @@ function renderQueueList() {
   });
 }
 
-// iOS style Hold (3s) & Drag Reordering
+// Queue Item Dropdown Menu Functions
+let activeDropdown = null;
+
+function showQueueItemDropdown(e, index) {
+  e.stopPropagation();
+  closeActiveDropdown();
+
+  const button = e.currentTarget;
+  const rect = button.getBoundingClientRect();
+  const panelRect = queuePanel.getBoundingClientRect();
+
+  const dropdown = document.createElement('div');
+  dropdown.className = 'queue-item-dropdown';
+  
+  // Position dropdown relative to the sliding queue panel viewport
+  dropdown.style.top = `${rect.bottom - panelRect.top}px`;
+  dropdown.style.right = `${panelRect.right - rect.right}px`;
+
+  dropdown.innerHTML = `
+    <button class="dropdown-action-btn" data-action="play-now">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+        <polygon points="5 3 19 12 5 21 5 3"/>
+      </svg>
+      Play Now
+    </button>
+    <button class="dropdown-action-btn remove-action" data-action="remove">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+        <polyline points="3 6 5 6 21 6"></polyline>
+        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+        <line x1="10" y1="11" x2="10" y2="17"></line>
+        <line x1="14" y1="11" x2="14" y2="17"></line>
+      </svg>
+      Remove
+    </button>
+  `;
+
+  dropdown.querySelector('[data-action="play-now"]').addEventListener('click', (ev) => {
+    ev.stopPropagation();
+    playQueueTrackNow(index);
+    closeActiveDropdown();
+  });
+
+  dropdown.querySelector('[data-action="remove"]').addEventListener('click', (ev) => {
+    ev.stopPropagation();
+    removeQueueTrack(index);
+    closeActiveDropdown();
+  });
+
+  queuePanel.appendChild(dropdown);
+  activeDropdown = dropdown;
+
+  document.addEventListener('click', closeActiveDropdownOutside);
+}
+
+function closeActiveDropdown() {
+  if (activeDropdown) {
+    activeDropdown.remove();
+    activeDropdown = null;
+    document.removeEventListener('click', closeActiveDropdownOutside);
+  }
+}
+
+function closeActiveDropdownOutside(e) {
+  if (activeDropdown && !activeDropdown.contains(e.target) && !e.target.closest('.btn-queue-item-menu')) {
+    closeActiveDropdown();
+  }
+}
+
+function playQueueTrackNow(index) {
+  const track = queue[index];
+  if (!track) return;
+  
+  if (index !== 0) {
+    queue.splice(index, 1);
+    queue.unshift(track);
+  }
+  
+  loadAndPlayTrack(0);
+  renderQueueList();
+  showToast(`Playing Now: ${track.title}`);
+}
+
+function removeQueueTrack(index) {
+  const track = queue[index];
+  if (!track) return;
+  
+  queue.splice(index, 1);
+  
+  if (index === currentTrackIndex) {
+    if (queue.length === 0) {
+      audio.pause();
+      isPlaying = false;
+      currentTrackIndex = 0;
+      updatePlaybackUI();
+    } else {
+      const nextIndex = Math.min(index, queue.length - 1);
+      loadAndPlayTrack(nextIndex);
+    }
+  } else if (index < currentTrackIndex) {
+    currentTrackIndex--;
+  }
+  
+  renderQueueList();
+  showToast(`Removed from Queue: ${track.title}`);
+}
+
+// iOS style Hold (1s) & Drag Reordering
 let dragTimeout = null;
 let isDraggingQueue = false;
 let dragStartIndex = -1;
 let dragActiveElement = null;
 let touchStartY = 0;
+let touchStartX = 0;
 
 function setupQueueDragEvents(item) {
   item.addEventListener('touchstart', (e) => {
     const touch = e.touches[0];
     touchStartY = touch.clientY;
+    touchStartX = touch.clientX;
     dragStartIndex = parseInt(item.dataset.index);
     dragActiveElement = item;
 
     if (dragTimeout) clearTimeout(dragTimeout);
 
-    // iOS style 3 seconds hold threshold to drag
+    // iOS style 1 second hold threshold to drag
     dragTimeout = setTimeout(() => {
       isDraggingQueue = true;
       item.classList.add('held-active');
@@ -881,17 +1004,18 @@ function setupQueueDragEvents(item) {
           el.classList.add('dragging-ghost');
         }
       });
-    }, 3000);
+    }, 1000);
   }, { passive: true });
 
   item.addEventListener('touchmove', (e) => {
     if (!dragActiveElement) return;
     const touch = e.touches[0];
     const diffY = touch.clientY - touchStartY;
+    const diffX = touch.clientX - touchStartX;
 
     if (!isDraggingQueue) {
-      // Cancel the hold-to-drag if user moves significant distance before 3s
-      if (Math.abs(diffY) > 8) {
+      // Cancel the hold-to-drag if user moves significant distance before 1s
+      if (Math.abs(diffY) > 8 || Math.abs(diffX) > 8) {
         clearTimeout(dragTimeout);
       }
       return;
@@ -1015,6 +1139,7 @@ function addSongToQueueById(trackId) {
 
 // Queue panel event bindings
 queueToggleBtn.addEventListener('click', () => {
+  closeActiveDropdown();
   queuePanel.classList.toggle('active');
   if (queuePanel.classList.contains('active')) {
     renderQueueList();
@@ -1022,6 +1147,7 @@ queueToggleBtn.addEventListener('click', () => {
 });
 
 queueCloseBtn.addEventListener('click', () => {
+  closeActiveDropdown();
   queuePanel.classList.remove('active');
 });
 
@@ -1030,6 +1156,10 @@ queueAddBtn.addEventListener('click', () => {
   setTimeout(() => {
     queueAddBtn.classList.remove('spinning');
     queueSelectModal.classList.remove('hidden');
+    
+    // Reset to choice tab on open
+    btnChooseImported.click();
+    
     renderModalSongsList(tracks);
     modalSearchInput.value = '';
   }, 550);
@@ -1051,6 +1181,85 @@ modalSearchInput.addEventListener('input', (e) => {
   );
   renderModalSongsList(filtered);
 });
+
+// Segmented Button Tab Switch Event Listeners
+btnChooseImported.addEventListener('click', () => {
+  btnChooseImported.classList.add('active');
+  btnImportNew.classList.remove('active');
+  segmentedSlider.style.transform = 'translateX(0)';
+  contentChooseImported.classList.remove('hidden');
+  contentImportNew.classList.add('hidden');
+});
+
+btnImportNew.addEventListener('click', () => {
+  btnImportNew.classList.add('active');
+  btnChooseImported.classList.remove('active');
+  segmentedSlider.style.transform = 'translateX(100%)';
+  contentImportNew.classList.remove('hidden');
+  contentChooseImported.classList.add('hidden');
+});
+
+// Direct File Selector bindings
+btnModalFileTrigger.addEventListener('click', () => {
+  modalFileInput.click();
+});
+
+modalFileInput.addEventListener('change', (e) => {
+  importSongsFromModal(e.target.files);
+});
+
+// Modal direct file parsing & storage pipeline
+async function importSongsFromModal(files) {
+  if (files.length === 0) return;
+  
+  showToast(`Parsing ${files.length} imported song(s)...`);
+  let importedCount = 0;
+  const newSongs = [];
+  
+  for (let i = 0; i < files.length; i++) {
+    const file = files[i];
+    const id = 'song_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7);
+    
+    try {
+      const songInfo = await parseSongMetadata(file, id);
+      await saveSongToDB(songInfo);
+      importedCount++;
+      newSongs.push(songInfo);
+    } catch (err) {
+      console.error('Failed to parse metadata for:', file.name, err);
+      try {
+        const fallbackInfo = makeFallbackSongData(file, id);
+        await saveSongToDB(fallbackInfo);
+        importedCount++;
+        newSongs.push(fallbackInfo);
+      } catch (fallbackErr) {
+        console.error('Ultimate fallback failed for:', file.name, fallbackErr);
+      }
+    }
+  }
+
+  showToast(`Successfully added ${importedCount} song(s)`);
+  
+  // Reload dashboard library
+  await loadLibrary();
+  
+  // Auto-append newly imported files to the active queue
+  newSongs.forEach(song => {
+    const dbSong = tracks.find(t => t.id === song.id);
+    if (dbSong) {
+      queue.push(dbSong);
+    } else {
+      queue.push(song);
+    }
+  });
+
+  renderQueueList();
+  
+  // Reset active tab back to choose view and render
+  btnChooseImported.click();
+  
+  modalFileInput.value = '';
+}
 
 // App Startup
 window.addEventListener('DOMContentLoaded', async () => {

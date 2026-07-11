@@ -1065,7 +1065,8 @@ body {
   cursor: grab;
   position: relative;
   transition: transform 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
-  touch-action: none; /* Crucial for touch drag events */
+  will-change: transform;
+  transform: translate3d(0,0,0);
 }
 
 /* Zoom effect on holding */
@@ -1277,5 +1278,219 @@ body {
 
 .btn-modal-add:active {
   transform: scale(0.88);
+}
+
+/* ==========================================================================
+   QUEUE ITEM ACTION DROPDOWN MENU
+   ========================================================================== */
+.queue-item-dropdown {
+  position: absolute;
+  background-color: oklch(18% 0.02 250 / 96%);
+  backdrop-filter: blur(20px) saturate(200%);
+  -webkit-backdrop-filter: blur(20px) saturate(200%);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-md);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  padding: 6px;
+  min-width: 140px;
+  animation: dropdownFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  transform-origin: top right;
+}
+
+@keyframes dropdownFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.dropdown-action-btn {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: 10px 12px;
+  background: none;
+  border: none;
+  border-radius: var(--border-radius-sm);
+  color: var(--text-primary);
+  font-size: 13.5px;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.2s var(--easing-spring);
+  width: 100%;
+}
+
+.dropdown-action-btn:hover {
+  background-color: oklch(100% 0 0 / 6%);
+}
+
+.dropdown-action-btn:active {
+  transform: scale(0.97);
+}
+
+.dropdown-action-btn.remove-action {
+  color: oklch(60% 0.15 20); /* Sleek red for delete */
+}
+
+.dropdown-action-btn.remove-action:hover {
+  background-color: oklch(60% 0.15 20 / 12%);
+}
+
+.btn-queue-item-menu {
+  color: var(--text-secondary);
+  opacity: 0.5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: var(--spacing-xs);
+  transition: opacity 0.2s ease, color 0.2s ease;
+  background: none;
+  border: none;
+  padding: 8px;
+  cursor: pointer;
+}
+
+.btn-queue-item-menu:hover {
+  opacity: 1;
+  color: var(--accent);
+}
+
+/* ==========================================================================
+   SEGMENTED CONTROLLER BAR & DIRECT FILE IMPORT
+   ========================================================================== */
+.modal-segmented-control-container {
+  padding: 0 var(--spacing-md) var(--spacing-sm) var(--spacing-md);
+  flex-shrink: 0;
+}
+
+.modal-segmented-control {
+  position: relative;
+  display: flex;
+  background-color: oklch(100% 0 0 / 4%);
+  border: 1px solid var(--border-color-inner);
+  border-radius: var(--border-radius-md);
+  padding: 2px;
+  height: 36px;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.segmented-slider {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  bottom: 2px;
+  width: calc(50% - 2px);
+  background: var(--card-glass);
+  border: 1px solid oklch(100% 0 0 / 12%);
+  border-radius: calc(var(--border-radius-md) - 2px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  z-index: 1;
+}
+
+.segmented-btn {
+  flex: 1;
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  z-index: 2;
+  transition: color 0.2s ease, transform 0.1s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.segmented-btn.active {
+  color: var(--accent);
+}
+
+.segmented-btn:active {
+  transform: scale(0.97);
+}
+
+/* Tab display toggles */
+.tab-content {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow: hidden;
+}
+
+.tab-content.hidden {
+  display: none !important;
+}
+
+/* Import new song tab styling */
+.modal-import-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px var(--spacing-lg);
+  text-align: center;
+  flex: 1;
+}
+
+.import-glow-icon {
+  background-color: oklch(80% 0.12 85 / 8%);
+  border: 1px solid oklch(80% 0.12 85 / 15%);
+  color: var(--accent);
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: var(--spacing-md);
+  box-shadow: 0 0 20px oklch(80% 0.12 85 / 10%);
+  animation: glowPulse 2s infinite ease-in-out;
+}
+
+@keyframes glowPulse {
+  0% { transform: scale(1); box-shadow: 0 0 20px oklch(80% 0.12 85 / 10%); }
+  50% { transform: scale(1.04); box-shadow: 0 0 30px oklch(80% 0.12 85 / 20%); }
+  100% { transform: scale(1); box-shadow: 0 0 20px oklch(80% 0.12 85 / 10%); }
+}
+
+.import-hint {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin-bottom: var(--spacing-lg);
+}
+
+.btn-import-action {
+  background: var(--card-glass);
+  color: var(--accent);
+  border: 1px solid var(--border-color);
+  padding: 12px 24px;
+  border-radius: var(--border-radius-md);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  transition: transform 0.2s var(--easing-spring), border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.btn-import-action:hover {
+  background-color: oklch(100% 0 0 / 6%);
+  border-color: var(--accent);
+}
+
+.btn-import-action:active {
+  transform: scale(0.95);
 }
 
