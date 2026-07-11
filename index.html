@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+  <title>AuraPlayer</title>
+  
+  <!-- Web App Manifest & iOS Settings -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="AuraPlayer">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;1,600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Media tags library for metadata parsing (cached by Service Worker) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jsmediatags/3.9.5/jsmediatags.min.js"></script>
+  
+  <!-- App Stylesheet -->
+  <link rel="stylesheet" href="app.css">
+</head>
+<body>
+  <!-- Status bar background for iOS safe area -->
+  <div class="ios-status-bar-spacer"></div>
+
+  <!-- Background decorations (Dynamic glows for Gold theme) -->
+  <div class="bg-glow bg-glow-1"></div>
+  <div class="bg-glow bg-glow-2"></div>
+
+  <!-- Main Container -->
+  <div class="app-container">
+    
+    <!-- Top Action Bar -->
+    <header class="app-header">
+      <div class="brand">
+        <h1 class="logo-text">AURA<span class="logo-sub">PLAYER</span></h1>
+      </div>
+      <div class="header-actions">
+
+        
+        <!-- Import Music Button -->
+        <label for="music-input" class="btn-primary" id="import-label">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
+          </svg>
+          Import
+        </label>
+        <input type="file" id="music-input" multiple accept="audio/mp3,audio/mpeg,audio/x-m4a,audio/m4a,audio/wav,audio/x-wav" style="display: none;">
+      </div>
+    </header>
+
+    <!-- Library Section -->
+    <main class="library-section">
+      <div class="section-title-bar">
+        <h2>Your Library</h2>
+        <span id="track-count" class="badge">0 Songs</span>
+      </div>
+      
+      <!-- Search Input -->
+      <div class="search-bar-container">
+        <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
+        </svg>
+        <input type="search" id="search-input" placeholder="Search songs, artists...">
+      </div>
+
+      <!-- Songs List -->
+      <div class="songs-list" id="songs-list">
+        <!-- Empty State -->
+        <div class="empty-state" id="empty-state">
+          <div class="empty-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M9 18V5l12-2v13M9 9l12-2M9 18a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm12-2a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/>
+            </svg>
+          </div>
+          <h3>No music files added</h3>
+          <p>Tap <strong>"Import"</strong> above and select audio files from your iPhone's Files app (under your "music" folder).</p>
+        </div>
+      </div>
+    </main>
+
+    <!-- Mini Player (Pinned Bottom) -->
+    <div class="mini-player hidden" id="mini-player">
+      <div class="mini-player-content">
+        <div class="mini-artwork-container">
+          <img src="" alt="Album Art" id="mini-artwork" class="mini-artwork">
+          <div class="mini-artwork-fallback" id="mini-artwork-fallback">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
+          </div>
+        </div>
+        <div class="mini-info" id="mini-trigger-expand">
+          <div class="mini-title" id="mini-title">Song Title</div>
+          <div class="mini-artist" id="mini-artist">Artist</div>
+        </div>
+        <div class="mini-controls">
+          <button id="mini-play" class="btn-icon-play" aria-label="Play/Pause">
+            <svg viewBox="0 0 24 24" fill="currentColor" class="play-svg"><path d="M8 5v14l11-7z"/></svg>
+            <svg viewBox="0 0 24 24" fill="currentColor" class="pause-svg hidden"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+          </button>
+          <button id="mini-next" class="btn-icon" aria-label="Next Song">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg>
+          </button>
+        </div>
+      </div>
+      <!-- Mini progress bar -->
+      <div class="mini-progress-bar">
+        <div class="mini-progress-fill" id="mini-progress-fill"></div>
+      </div>
+    </div>
+
+    <!-- Full Screen Player Panel (Slide-up) -->
+    <div class="player-panel" id="player-panel">
+      <!-- Handle to drag down / collapse -->
+      <div class="panel-handle-container" id="panel-close-trigger">
+        <div class="panel-handle"></div>
+      </div>
+
+      <div class="player-panel-content">
+        <!-- Top row: theme info / active display -->
+        <div class="panel-header">
+          <span class="playing-from">PLAYING FROM LOCAL STORAGE</span>
+          <button id="panel-close-btn" class="btn-icon" aria-label="Minimize">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+              <path d="m6 9 6 6 6-6"/>
+            </svg>
+          </button>
+        </div>
+
+        <!-- Album Art Card Container -->
+        <div class="artwork-showcase">
+          <div class="artwork-card" id="artwork-card">
+            <img src="" alt="Album Art" id="player-artwork" class="player-artwork">
+            <div class="player-artwork-fallback" id="player-artwork-fallback">
+              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
+            </div>
+          </div>
+        </div>
+
+        <!-- Song Details (Title/Artist) -->
+        <div class="song-details">
+          <div class="title-scroller">
+            <h3 id="player-title" class="player-title">Song Title</h3>
+          </div>
+          <p id="player-artist" class="player-artist">Artist Name</p>
+        </div>
+
+        <!-- Custom Audio Element (Hidden) -->
+        <audio id="audio-element" preload="auto"></audio>
+
+        <!-- Player Scrubber Timeline -->
+        <div class="player-timeline">
+          <div class="time-slider-container">
+            <input type="range" id="time-slider" min="0" max="100" value="0" step="0.1" class="custom-slider">
+            <div class="slider-track-fill" id="slider-track-fill"></div>
+          </div>
+          <div class="time-stamps">
+            <span id="current-time">0:00</span>
+            <span id="duration-time">0:00</span>
+          </div>
+        </div>
+
+        <!-- Primary Controls (Prev, Play, Next) -->
+        <div class="player-controls">
+          <!-- Shuffle Button -->
+          <button id="btn-shuffle" class="btn-icon btn-secondary-control" aria-label="Shuffle">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M16 3h5v5M4 20l7-7M21 3 14 10M4 4l17 17M16 21h5v-5"/>
+            </svg>
+          </button>
+
+          <!-- Back/Previous Button -->
+          <button id="btn-prev" class="btn-control" aria-label="Previous">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg>
+          </button>
+
+          <!-- Play/Pause Button (Primary Gold Center) -->
+          <button id="btn-play-pause" class="btn-play-large" aria-label="Play or Pause">
+            <svg viewBox="0 0 24 24" fill="currentColor" class="play-svg-large"><path d="M8 5v14l11-7z"/></svg>
+            <svg viewBox="0 0 24 24" fill="currentColor" class="pause-svg-large hidden"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+          </button>
+
+          <!-- Skip/Next Button -->
+          <button id="btn-next" class="btn-control" aria-label="Next">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg>
+          </button>
+
+          <!-- Loop Button -->
+          <button id="btn-loop" class="btn-icon btn-secondary-control" aria-label="Repeat">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="loop-icon-all">
+              <path d="m17 2 4 4-4 4M3 11v-1a4 4 0 0 1 4-4h14M7 22l-4-4 4-4M21 13v1a4 4 0 0 1-4 4H3"/>
+            </svg>
+            <span class="loop-badge hidden" id="loop-single-indicator">1</span>
+          </button>
+        </div>
+
+        <!-- Volume Controller -->
+        <div class="volume-container">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+          </svg>
+          <input type="range" id="volume-slider" min="0" max="1" step="0.05" value="0.8" class="volume-slider">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast notification system -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- Application Logic -->
+  <script src="app.js"></script>
+</body>
+</html>

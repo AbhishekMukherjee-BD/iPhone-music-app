@@ -1,0 +1,63 @@
+========================================================================
+AURAPLAYER PWA MUSIC PLAYER - AGENT HANDOFF DOCUMENT
+========================================================================
+
+SYSTEM STATE & BACKGROUND INFO:
+- Device Target: iPhone 11 Pro Max (iOS Safari)
+- Dev Environment: macOS, Node.js v22.11.0, npm v10.9.0
+- Host Server: Active locally on port 8080 (python3 -m http.server 8080)
+- Host Local IP: 10.148.141.22
+- Current PWA Preview Link: http://10.148.141.22:8080
+
+------------------------------------------------------------------------
+1. ARCHITECTURE OVERVIEW & IMPLEMENTATION DETAILS
+------------------------------------------------------------------------
+AuraPlayer is built as an offline-first Progressive Web App (PWA). This bypasses the need for the full Xcode development suite while providing a high-fidelity, native-feeling music player on iOS.
+
+Core Technical Blocks:
+* Offline Caching (Service Worker): `sw.js` caches all core player assets (index.html, app.css, app.js, manifest.json, local icons, and the jsmediatags CDN script) so the app launches instantly offline.
+* Local Database (IndexedDB): App uses a custom IndexedDB database (`AuraPlayerDB`, store `songs`) in `app.js` to store MP3 audio files as raw binary Blobs. This ensures imported music is persistently stored on the device and remains playable without network access.
+* Metadata Extraction & Fallback: Reads MP3 ID3 tags (title, artist, album art) using the `jsmediatags` library. Convert raw cover art bytes to Base64 strings for persistent storage in IndexedDB. If metadata is missing or fails to parse, it falls back to parsing the filename (e.g. splits "Artist - SongName.mp3" safely).
+* Background Play & Lock Screen (Media Session API): Configured standard HTML5 `<audio>` playback. When playing, it hooks into the native iOS Media Session API, syncing the track title, artist, and cover art to the iOS Lock Screen & Control Center, and routes playback controls (play, pause, skip, prev, seek slider) back to JS event handlers.
+* iOS Gesture Interactions: Implemented touch listeners on the player's drag handle so users can swipe/drag down to dismiss the full-screen player panel.
+* Haptic Button Animations: Tapping controls triggers scale-down animations (`scale(0.92)`) with spring easings for satisfying physical feedback.
+
+------------------------------------------------------------------------
+2. TWO INTERFACES IMPLEMENTED
+------------------------------------------------------------------------
+We have built two distinct visual interfaces switchable in real-time using the theme toggle button (id="theme-toggle" inside header):
+
+- Theme 1: Luxury Obsidian & Gold (Default)
+  - Color palette: Obsidian charcoal gradients, metallic gold accents, gold text.
+  - Cards: Semi-transparent glassmorphic player card with gold borders, radial gold backing glows.
+  - Special Animations: Album art is styled as a CD (circle) that rotates dynamically while playing, and features a glowing gold drop-shadow that pulses with the audio.
+  
+- Theme 2: Apple Minimalist
+  - Color palette: Deep stark black background, flat dark-gray blocks, minimal white/gray text.
+  - Accent color: Apple Music pink/red (`#ff2d55`) for active buttons.
+  - Cards: Sharp, flat cards with iOS 12px rounded corners, crisp borders, and zero glowing elements.
+  - Font: Clean, bold San Francisco-style sans-serif typography.
+
+------------------------------------------------------------------------
+3. FILES ORGANIZED IN THIS HANDOFF FOLDER
+------------------------------------------------------------------------
+The user is copy-pasting these files to their IDE folder. The handoff folder contents are:
+- `index.html`       - The PWA skeleton, theme toggle buttons, mini player, and full panel.
+- `app.css`         - Unified stylesheet containing variables, spacing rules, and layout specs.
+- `app.js`          - Playback manager, IndexedDB functions, gestures, and media session hooks.
+- `manifest.json`   - PWA declaration for iOS installation compatibility.
+- `sw.js`           - Offline asset cache registration.
+- `README.md`       - Step-by-step instructions for the user to load and run on their iPhone.
+- `icons/`          - Directory with 192x192 and 512x512 high-resolution app icon PNGs.
+- `handoff.txt`     - This file.
+
+------------------------------------------------------------------------
+4. INSTRUCTIONS FOR THE NEXT AGENT (DURING PROCEEDING)
+------------------------------------------------------------------------
+1. Wait for the user to indicate which theme they prefer (Option 1: Luxury Gold OR Option 2: Apple Minimalist).
+2. Clean up the unused theme stylesheet rules from `app.css`.
+3. Clean up theme toggle structures from `index.html` (remove the toggle button and the inactive theme SVGs).
+4. Remove theme-toggling JavaScript handlers and state variables from `app.js` (e.g. `currentTheme`, `themeToggleBtn.addEventListener`, `initTheme`).
+5. Make the selected theme the single, permanent stylesheet of the player.
+6. Verify there are no residual console warnings, clean up redundant SVG icons or assets, and perform a final check to ensure background audio, IndexedDB storage, and lock screen media sync remain fully functional.
+========================================================================

@@ -1,0 +1,970 @@
+/* ==========================================================================
+   CSS DESIGN SYSTEM & LIQUID GLASS THEME
+   ========================================================================== */
+
+/* Typography & Spacing Hierarchy */
+:root {
+  --font-heading: 'Plus Jakarta Sans', -apple-system, sans-serif;
+  --font-body: 'Plus Jakarta Sans', -apple-system, sans-serif;
+  
+  --spacing-xxs: 4px;
+  --spacing-xs: 8px;
+  --spacing-sm: 16px;
+  --spacing-md: 24px;
+  --spacing-lg: 32px;
+  --spacing-xl: 48px;
+  --spacing-xxl: 64px;
+
+  /* Liquid Glass Palette in OKLCH */
+  --bg-primary: oklch(14% 0.015 250); /* Sleek slate slate/obsidian */
+  --bg-secondary: oklch(18% 0.02 250); /* Tinted slate dark for containers */
+  --bg-tertiary: oklch(24% 0.025 250); /* Dark gray backing accent */
+  
+  --accent: oklch(80% 0.12 85); /* Premium Champagne Gold */
+  --accent-rgb: 212, 175, 55;
+  --accent-rose: oklch(74% 0.16 330); /* Rose Pink highlight */
+  
+  --text-primary: oklch(98% 0.005 250); /* Off-white readable text */
+  --text-secondary: oklch(72% 0.01 250); /* Muted slate text */
+  
+  /* Glassmorphism Specs */
+  --card-glass: oklch(20% 0.02 250 / 45%);
+  --card-blur: blur(24px) saturate(190%);
+  --border-color: oklch(100% 0 0 / 12%); /* Specular glass border */
+  --border-color-inner: oklch(100% 0 0 / 6%);
+  --shadow-primary: 0 12px 40px rgba(0, 0, 0, 0.5), 0 0 20px rgba(212, 175, 55, 0.05);
+  
+  /* Radii */
+  --border-radius-lg: 24px;
+  --border-radius-md: 16px;
+  --border-radius-sm: 8px;
+  
+  /* Motion & Physical Easing Curves */
+  --easing-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --easing-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Specific Logo Typography Styling */
+.logo-text {
+  font-family: 'Playfair Display', serif;
+  font-weight: 600;
+  letter-spacing: 2px;
+}
+
+.logo-sub {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 300;
+  letter-spacing: 4px;
+  color: var(--accent);
+}
+
+/* ==========================================================================
+   BASE & RESET STYLES (iOS Optimized)
+   ========================================================================== */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-user-select: none; /* Disable text select for native feel */
+  user-select: none;
+  -webkit-tap-highlight-color: transparent; /* Remove Safari tap flash */
+}
+
+body {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  overflow: hidden;
+  height: 100vh;
+  width: 100vw;
+  position: fixed;
+  display: flex;
+  flex-direction: column;
+  transition: background-color 0.4s var(--easing-smooth);
+}
+
+/* iPhone Notch Safe Area Handling */
+.ios-status-bar-spacer {
+  height: env(safe-area-inset-top, 44px);
+  background: transparent;
+  width: 100%;
+  flex-shrink: 0;
+}
+
+/* Dynamic background glows for Liquid Glass refraction */
+.bg-glow {
+  position: absolute;
+  width: 350px;
+  height: 350px;
+  border-radius: 50%;
+  filter: blur(120px);
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.16;
+  mix-blend-mode: screen;
+}
+
+.bg-glow-1 {
+  top: -50px;
+  right: -50px;
+  background-color: var(--accent);
+  animation: fluidGlow1 25s ease infinite alternate;
+}
+
+.bg-glow-2 {
+  bottom: 15%;
+  left: -100px;
+  background-color: var(--accent-rose);
+  animation: fluidGlow2 20s ease infinite alternate;
+}
+
+@keyframes fluidGlow1 {
+  0% {
+    transform: translate(0, 0) scale(1);
+    background-color: oklch(80% 0.12 85);
+  }
+  33% {
+    transform: translate(60px, 40px) scale(1.1);
+    background-color: oklch(74% 0.16 330);
+  }
+  66% {
+    transform: translate(-40px, 80px) scale(0.95);
+    background-color: oklch(65% 0.24 280);
+  }
+  100% {
+    transform: translate(0, 0) scale(1);
+    background-color: oklch(80% 0.12 85);
+  }
+}
+
+@keyframes fluidGlow2 {
+  0% {
+    transform: translate(0, 0) scale(1);
+    background-color: oklch(74% 0.16 330);
+  }
+  50% {
+    transform: translate(-80px, -60px) scale(1.15);
+    background-color: oklch(80% 0.12 85);
+  }
+  100% {
+    transform: translate(0, 0) scale(1);
+    background-color: oklch(74% 0.16 330);
+  }
+}
+
+/* ==========================================================================
+   LAYOUT CONTAINERS
+   ========================================================================== */
+.app-container {
+  display: flex;
+  flex-direction: column;
+  height: calc(100% - env(safe-area-inset-top, 44px));
+  width: 100%;
+  position: relative;
+  z-index: 1;
+  padding-bottom: env(safe-area-inset-bottom, 20px);
+}
+
+.app-header {
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 var(--spacing-sm);
+  border-bottom: 1px solid var(--border-color);
+  flex-shrink: 0;
+  background-color: oklch(14% 0.015 250 / 80%);
+  backdrop-filter: var(--card-blur);
+  -webkit-backdrop-filter: var(--card-blur);
+}
+
+.brand h1 {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+/* ==========================================================================
+   BUTTONS & ANIMATION HOOKS (Micro-interactions)
+   ========================================================================== */
+.btn-icon {
+  background: none;
+  border: none;
+  color: var(--text-primary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-xs);
+  border-radius: 50%;
+  transition: transform 0.2s var(--easing-spring), background-color 0.2s var(--easing-smooth), color 0.2s var(--easing-smooth);
+}
+
+.btn-icon svg {
+  width: 24px;
+  height: 24px;
+}
+
+/* Tactile bounce / Zoom on tap */
+.btn-icon:active,
+.btn-control:active,
+.btn-play-large:active,
+.btn-primary:active,
+.song-item:active {
+  transform: scale(0.92);
+}
+
+.btn-primary {
+  background-color: var(--accent);
+  color: var(--bg-primary);
+  font-weight: 600;
+  font-size: 14px;
+  padding: 8px 16px;
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  cursor: pointer;
+  box-shadow: 0 4px 12px oklch(80% 0.12 85 / 20%);
+  border: 1px solid oklch(100% 100% 0 / 15%);
+  transition: transform 0.2s var(--easing-spring), box-shadow 0.2s var(--easing-smooth), background-color 0.2s var(--easing-smooth);
+}
+
+/* ==========================================================================
+   LIBRARY SECTION & SEARCH
+   ========================================================================== */
+.library-section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: var(--spacing-sm);
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch; /* Smooth iOS momentum scroll */
+}
+
+.section-title-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--spacing-sm);
+}
+
+.section-title-bar h2 {
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+}
+
+.badge {
+  font-size: 12px;
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  padding: 4px 10px;
+  border-radius: 12px;
+}
+
+.search-bar-container {
+  display: flex;
+  align-items: center;
+  background-color: var(--card-glass);
+  backdrop-filter: var(--card-blur);
+  -webkit-backdrop-filter: var(--card-blur);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-md);
+  padding: 0 var(--spacing-sm);
+  height: 48px;
+  margin-bottom: var(--spacing-md);
+  transition: border-color 0.2s var(--easing-smooth);
+}
+
+.search-bar-container:focus-within {
+  border-color: var(--accent);
+}
+
+.search-icon {
+  width: 20px;
+  height: 20px;
+  color: var(--text-secondary);
+  margin-right: var(--spacing-xs);
+  flex-shrink: 0;
+}
+
+#search-input {
+  background: none;
+  border: none;
+  color: var(--text-primary);
+  font-size: 16px;
+  width: 100%;
+  outline: none;
+}
+
+#search-input::placeholder {
+  color: var(--text-secondary);
+  opacity: 0.6;
+}
+
+/* Songs List View */
+.songs-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  padding-bottom: 90px; /* Spacer so last item is not blocked by mini player */
+}
+
+.song-item {
+  display: flex;
+  align-items: center;
+  padding: 10px;
+  background-color: var(--card-glass);
+  backdrop-filter: var(--card-blur);
+  -webkit-backdrop-filter: var(--card-blur);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-md);
+  cursor: pointer;
+  transition: transform 0.2s var(--easing-spring), background-color 0.2s var(--easing-smooth), border-color 0.2s var(--easing-smooth);
+}
+
+.song-item:hover, .song-item.active {
+  background-color: oklch(80% 0.12 85 / 8%);
+  border-color: var(--accent);
+}
+
+.song-artwork {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--border-radius-sm);
+  object-fit: cover;
+  margin-right: var(--spacing-sm);
+  background-color: var(--bg-tertiary);
+  border: 1px solid var(--border-color-inner);
+}
+
+.song-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.song-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.song-artist {
+  font-size: 13px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.song-action-container {
+  display: flex;
+  align-items: center;
+}
+
+.delete-song-btn {
+  color: var(--text-secondary);
+  opacity: 0.5;
+  transition: opacity 0.2s ease, color 0.2s ease;
+}
+
+.delete-song-btn:hover {
+  color: oklch(60% 0.15 20); /* Soft warning red */
+  opacity: 1;
+}
+
+/* Empty State Styling */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: var(--spacing-xxl) var(--spacing-md);
+  color: var(--text-secondary);
+}
+
+.empty-icon {
+  width: 64px;
+  height: 64px;
+  margin-bottom: var(--spacing-md);
+  color: var(--accent);
+  opacity: 0.8;
+}
+
+.empty-state h3 {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: var(--spacing-xs);
+}
+
+.empty-state p {
+  font-size: 14px;
+  line-height: 1.5;
+  max-width: 260px;
+}
+
+/* ==========================================================================
+   MINI PLAYER (Pinned Bottom)
+   ========================================================================== */
+.mini-player {
+  position: absolute;
+  bottom: calc(env(safe-area-inset-bottom, 20px) + var(--spacing-xs));
+  left: var(--spacing-sm);
+  right: var(--spacing-sm);
+  height: 64px;
+  background-color: var(--card-glass);
+  backdrop-filter: var(--card-blur);
+  -webkit-backdrop-filter: var(--card-blur);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-md);
+  box-shadow: var(--shadow-primary);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  overflow: hidden;
+  z-index: 10;
+  transition: transform 0.3s var(--easing-smooth), opacity 0.3s ease;
+}
+
+.mini-player.hidden {
+  transform: translateY(120%);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.mini-player-content {
+  display: flex;
+  align-items: center;
+  padding: 0 var(--spacing-sm);
+  height: 100%;
+}
+
+.mini-artwork-container {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--border-radius-sm);
+  overflow: hidden;
+  margin-right: var(--spacing-sm);
+  background-color: var(--bg-tertiary);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mini-artwork {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.mini-artwork-fallback {
+  color: var(--text-secondary);
+  width: 20px;
+  height: 20px;
+}
+
+.mini-artwork.hidden, .mini-artwork-fallback.hidden {
+  display: none;
+}
+
+.mini-info {
+  flex: 1;
+  min-width: 0;
+  cursor: pointer;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.mini-title {
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--text-primary);
+}
+
+.mini-artist {
+  font-size: 12px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mini-controls {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.mini-controls button {
+  width: 36px;
+  height: 36px;
+}
+
+.btn-icon-play {
+  background-color: var(--accent);
+  color: var(--bg-primary);
+  border: none;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 8px oklch(80% 0.12 85 / 30%);
+  transition: transform 0.2s var(--easing-spring);
+}
+
+.btn-icon-play svg {
+  width: 20px;
+  height: 20px;
+}
+
+.btn-icon-play svg.hidden {
+  display: none;
+}
+
+.mini-progress-bar {
+  height: 2.5px;
+  background-color: rgba(255, 255, 255, 0.1);
+  width: 100%;
+}
+
+.mini-progress-fill {
+  height: 100%;
+  background-color: var(--accent);
+  width: 0%;
+  transition: width 0.1s linear;
+}
+
+/* ==========================================================================
+   FULL SCREEN NOW PLAYING PANEL (Slide-up Sheet)
+   ========================================================================== */
+.player-panel {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: var(--card-glass);
+  backdrop-filter: var(--card-blur);
+  -webkit-backdrop-filter: var(--card-blur);
+  border-top: 1px solid var(--border-color);
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  transform: translateY(100%);
+  opacity: 0;
+  transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s ease;
+  padding-top: env(safe-area-inset-top, 44px);
+  padding-bottom: env(safe-area-inset-bottom, 20px);
+}
+
+/* When the player panel is expanded and active */
+.player-panel.active {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+.player-panel-active .player-panel {
+  background: radial-gradient(circle at top, oklch(80% 0.12 85 / 10%) 0%, oklch(14% 0.015 250 / 92%) 100%);
+}
+
+.panel-handle-container {
+  height: 32px;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.panel-handle {
+  width: 36px;
+  height: 5px;
+  background-color: rgba(255, 255, 255, 0.2);
+  border-radius: 3px;
+  transition: background-color 0.2s ease;
+}
+
+.panel-handle-container:hover .panel-handle {
+  background-color: rgba(255, 255, 255, 0.4);
+}
+
+.player-panel-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 0 var(--spacing-lg) var(--spacing-md) var(--spacing-lg);
+  max-width: 500px;
+  margin: 0 auto;
+  width: 100%;
+  overflow-y: auto;
+}
+
+.panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 40px;
+}
+
+.playing-from {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  color: var(--text-secondary);
+}
+
+/* Artwork Display & Pulse Glow */
+.artwork-showcase {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: var(--spacing-md) 0;
+  min-height: 250px;
+}
+
+/* 3D Floating Glass Tile Artwork Showcase */
+.artwork-card {
+  width: clamp(220px, 65vw, 290px);
+  height: clamp(220px, 65vw, 290px);
+  border-radius: var(--border-radius-lg);
+  overflow: hidden;
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.65);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  transition: transform 0.5s var(--easing-spring), box-shadow 0.5s ease;
+}
+
+/* Specular glass reflection overlay */
+.artwork-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.16) 0%, rgba(255, 255, 255, 0) 50%, rgba(0, 0, 0, 0.2) 100%);
+  z-index: 2;
+  pointer-events: none;
+}
+
+/* Glowing aura and slight lift when playing */
+.artwork-card.playing {
+  transform: scale(1.03);
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.75), 0 0 30px oklch(80% 0.12 85 / 15%);
+}
+
+.player-artwork {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.4s var(--easing-smooth);
+}
+
+.player-artwork-fallback {
+  color: var(--text-secondary);
+  width: 72px;
+  height: 72px;
+  opacity: 0.5;
+}
+
+.player-artwork.hidden, .player-artwork-fallback.hidden {
+  display: none;
+}
+
+/* Song Title & Artist info */
+.song-details {
+  text-align: left;
+  margin-bottom: var(--spacing-sm);
+  width: 100%;
+}
+
+.title-scroller {
+  overflow: hidden;
+  width: 100%;
+  position: relative;
+}
+
+.player-title {
+  font-size: 24px;
+  font-family: var(--font-heading);
+  letter-spacing: -0.5px;
+  color: var(--text-primary);
+  margin-bottom: 6px;
+  white-space: nowrap;
+}
+
+.player-artist {
+  font-size: 15px;
+  color: var(--text-secondary);
+}
+
+/* ==========================================================================
+   TIMELINE & SCRUBBER (iOS Slider Override)
+   ========================================================================== */
+.player-timeline {
+  width: 100%;
+  margin-bottom: var(--spacing-md);
+}
+
+.time-slider-container {
+  position: relative;
+  width: 100%;
+  height: 20px;
+  display: flex;
+  align-items: center;
+}
+
+.custom-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 4px;
+  border-radius: 2px;
+  background-color: rgba(255, 255, 255, 0.12);
+  outline: none;
+  cursor: pointer;
+  position: relative;
+  z-index: 2;
+}
+
+/* Fill effect */
+.slider-track-fill {
+  position: absolute;
+  height: 4px;
+  background-color: var(--accent);
+  left: 0;
+  top: 8px; /* half container height - half track height */
+  border-radius: 2px;
+  pointer-events: none;
+  z-index: 1;
+  width: 0%;
+  box-shadow: 0 0 10px oklch(80% 0.12 85 / 40%);
+}
+
+/* Slider Knobs */
+.custom-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: var(--text-primary);
+  cursor: pointer;
+  transition: transform 0.15s ease, background-color 0.2s ease;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.5);
+}
+
+/* Make it larger when interacting */
+.custom-slider:active::-webkit-slider-thumb {
+  transform: scale(1.8);
+  background-color: var(--accent);
+}
+
+.time-stamps {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--text-secondary);
+  margin-top: var(--spacing-xs);
+  font-weight: 500;
+}
+
+/* ==========================================================================
+   PRIMARY CONTROLS
+   ========================================================================== */
+.player-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  margin-bottom: var(--spacing-md);
+}
+
+.btn-control {
+  background: none;
+  border: none;
+  color: var(--text-primary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  transition: transform 0.2s var(--easing-spring);
+}
+
+.btn-control svg {
+  width: 32px;
+  height: 32px;
+}
+
+/* Large Gold/Champagne Play Button with glass shadow */
+.btn-play-large {
+  background-color: var(--accent);
+  color: var(--bg-primary);
+  border: none;
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 10px 30px oklch(80% 0.12 85 / 30%);
+  transition: transform 0.2s var(--easing-spring), background-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.btn-play-large svg {
+  width: 32px;
+  height: 32px;
+}
+
+.btn-play-large svg.hidden {
+  display: none;
+}
+
+.btn-play-large:active {
+  box-shadow: 0 4px 15px oklch(80% 0.12 85 / 15%);
+}
+
+/* Secondary controls (Loop / Shuffle states) */
+.btn-secondary-control {
+  color: var(--text-secondary);
+  opacity: 0.6;
+  position: relative;
+}
+
+.btn-secondary-control.active {
+  color: var(--accent);
+  opacity: 1;
+  filter: drop-shadow(0 0 4px oklch(80% 0.12 85 / 40%));
+}
+
+.loop-badge {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  background-color: var(--accent);
+  color: var(--bg-primary);
+  font-size: 8px;
+  font-weight: 700;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.loop-badge.hidden {
+  display: none;
+}
+
+/* ==========================================================================
+   VOLUME CONTROLLER
+   ========================================================================== */
+.volume-container {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  color: var(--text-secondary);
+  width: 100%;
+  padding: 0 var(--spacing-md);
+  margin-top: var(--spacing-xs);
+}
+
+.volume-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 3.5px;
+  background-color: rgba(255,255,255,0.08);
+  border-radius: 2px;
+  outline: none;
+}
+
+.volume-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background-color: var(--text-primary);
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.4);
+}
+
+/* ==========================================================================
+   TOAST SYSTEM (Popups)
+   ========================================================================== */
+.toast-container {
+  position: fixed;
+  top: calc(env(safe-area-inset-top, 44px) + var(--spacing-sm));
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  z-index: 1000;
+  width: 85%;
+  max-width: 320px;
+  pointer-events: none;
+}
+
+.toast {
+  background-color: oklch(20% 0.02 250 / 85%);
+  color: #fff;
+  border: 1px solid var(--accent);
+  backdrop-filter: var(--card-blur);
+  -webkit-backdrop-filter: var(--card-blur);
+  padding: 12px 20px;
+  border-radius: var(--border-radius-md);
+  font-size: 13px;
+  font-weight: 500;
+  text-align: center;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+  animation: toastFadeIn 0.3s var(--easing-spring) forwards;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  pointer-events: auto;
+}
+
+@keyframes toastFadeIn {
+  from { opacity: 0; transform: translateY(-20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.toast.fade-out {
+  opacity: 0;
+  transform: translateY(-20px);
+}
