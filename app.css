@@ -15,32 +15,32 @@
   --spacing-xl: 48px;
   --spacing-xxl: 64px;
 
-  /* Liquid Glass Palette in OKLCH */
-  --bg-primary: oklch(14% 0.015 250); /* Sleek slate slate/obsidian */
-  --bg-secondary: oklch(18% 0.02 250); /* Tinted slate dark for containers */
-  --bg-tertiary: oklch(24% 0.025 250); /* Dark gray backing accent */
+  /* Liquid Glass Palette in OKLCH (Apple Light White Redesign) */
+  --bg-primary: oklch(98% 0.003 250); /* Premium Apple Clean White */
+  --bg-secondary: oklch(95% 0.005 250); /* Soft light gray card containers */
+  --bg-tertiary: oklch(91% 0.005 250); /* Lighter slate gray elements */
   
-  --accent: oklch(80% 0.12 85); /* Premium Champagne Gold */
+  --accent: oklch(75% 0.12 85); /* Richer Gold Accent for high contrast in light mode */
   --accent-rgb: 212, 175, 55;
-  --accent-rose: oklch(74% 0.16 330); /* Rose Pink highlight */
+  --accent-rose: oklch(72% 0.14 330); /* Rich Rose Pink highlight */
   
-  --text-primary: oklch(98% 0.005 250); /* Off-white readable text */
-  --text-secondary: oklch(72% 0.01 250); /* Muted slate text */
+  --text-primary: oklch(15% 0.01 250); /* Dark obsidian black for deep contrast */
+  --text-secondary: oklch(48% 0.01 250); /* Muted slate gray text */
   
   /* Glassmorphism Specs */
-  --card-glass: oklch(20% 0.02 250 / 45%);
-  --card-blur: blur(24px) saturate(190%);
-  --border-color: oklch(100% 0 0 / 12%); /* Specular glass border */
-  --border-color-inner: oklch(100% 0 0 / 6%);
-  --shadow-primary: 0 12px 40px rgba(0, 0, 0, 0.5), 0 0 20px rgba(212, 175, 55, 0.05);
+  --card-glass: oklch(100% 0 0 / 50%);
+  --card-blur: blur(24px) saturate(180%);
+  --border-color: oklch(0% 0 0 / 8%); /* Subtly dark glass border */
+  --border-color-inner: oklch(0% 0 0 / 4%);
+  --shadow-primary: 0 12px 40px rgba(0, 0, 0, 0.08), 0 0 20px rgba(212, 175, 55, 0.03);
 
   /* Layered glass tiers (Apple uses "regular" vs "clear") */
-  --glass-regular-bg: oklch(22% 0.02 250 / 55%);
-  --glass-clear-bg: oklch(30% 0.02 250 / 20%);
-  --glass-blur: blur(28px) saturate(200%) brightness(1.05);
-  --glass-border: linear-gradient(135deg, rgba(255,255,255,0.35), rgba(255,255,255,0.05) 40%, rgba(255,255,255,0.15));
-  --glass-specular: linear-gradient(120deg, rgba(255,255,255,0.25) 0%, rgba(255,255,255,0) 35%, rgba(255,255,255,0.08) 60%, rgba(255,255,255,0) 100%);
-  --glass-shadow: 0 8px 32px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.08);
+  --glass-regular-bg: oklch(100% 0 0 / 68%); /* Frosted translucent white glass */
+  --glass-clear-bg: oklch(100% 0 0 / 30%); /* Ultra-clear white glass */
+  --glass-blur: blur(28px) saturate(190%) brightness(1.02);
+  --glass-border: linear-gradient(135deg, rgba(255,255,255,0.7), rgba(0,0,0,0.04) 40%, rgba(0,0,0,0.08));
+  --glass-specular: linear-gradient(120deg, rgba(255,255,255,0.65) 0%, rgba(255,255,255,0) 35%, rgba(0,0,0,0.03) 60%, rgba(255,255,255,0.3) 100%);
+  --glass-shadow: 0 8px 32px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.65);
   
   /* Radii */
   --border-radius-lg: 24px;
@@ -169,8 +169,8 @@ body {
   filter: blur(120px);
   pointer-events: none;
   z-index: 0;
-  opacity: 0.16;
-  mix-blend-mode: screen;
+  opacity: 0.22;
+  mix-blend-mode: normal;
 }
 
 .bg-glow-1 {
@@ -242,7 +242,7 @@ body {
   padding: 0 var(--spacing-sm);
   border-bottom: 1px solid var(--border-color);
   flex-shrink: 0;
-  background-color: oklch(14% 0.015 250 / 80%);
+  background-color: oklch(98% 0.003 250 / 80%);
   backdrop-filter: var(--card-blur);
   -webkit-backdrop-filter: var(--card-blur);
 }
@@ -391,7 +391,7 @@ body {
   display: flex;
   align-items: center;
   padding: 10px;
-  background-color: oklch(22% 0.02 250 / 60%);
+  background-color: oklch(95% 0.003 250 / 70%);
   border: 1px solid var(--border-color-inner);
   border-radius: var(--border-radius-md);
   cursor: pointer;
@@ -1001,8 +1001,8 @@ body {
 }
 
 .toast {
-  background-color: oklch(20% 0.02 250 / 85%);
-  color: #fff;
+  background-color: oklch(100% 0 0 / 85%);
+  color: var(--text-primary);
   border: 1px solid var(--accent);
   backdrop-filter: var(--card-blur);
   -webkit-backdrop-filter: var(--card-blur);
@@ -1037,13 +1037,13 @@ body {
   left: 0;
   right: 0;
   height: 72%;
-  background-color: oklch(18% 0.02 250 / 96%);
+  background-color: oklch(98% 0.003 250 / 94%);
   backdrop-filter: blur(28px) saturate(200%);
   -webkit-backdrop-filter: blur(28px) saturate(200%);
   border-top: 1px solid var(--border-color);
   border-top-left-radius: var(--border-radius-lg);
   border-top-right-radius: var(--border-radius-lg);
-  box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.08);
   z-index: 120;
   display: flex;
   flex-direction: column;
@@ -1117,7 +1117,7 @@ body {
   display: flex;
   align-items: center;
   padding: 12px;
-  background-color: oklch(100% 0 0 / 4%);
+  background-color: oklch(0% 0 0 / 3%);
   border: 1px solid var(--border-color-inner);
   border-radius: var(--border-radius-md);
   cursor: grab;
@@ -1130,9 +1130,9 @@ body {
 /* Zoom effect on holding */
 .queue-item.held-active {
   transform: scale(1.04);
-  background-color: oklch(100% 0 0 / 9%);
+  background-color: oklch(0% 0 0 / 7%);
   border-color: var(--accent);
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.7);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12);
   z-index: 1000;
   cursor: grabbing;
 }
@@ -1256,7 +1256,7 @@ body {
 .modal-search-container {
   display: flex;
   align-items: center;
-  background-color: oklch(100% 0 0 / 4%);
+  background-color: oklch(0% 0 0 / 4%);
   border: 1px solid var(--border-color-inner);
   border-radius: var(--border-radius-md);
   margin: var(--spacing-sm) var(--spacing-md) var(--spacing-xs) var(--spacing-md);
@@ -1285,7 +1285,7 @@ body {
 }
 
 .modal-song-item:hover {
-  background-color: oklch(100% 0 0 / 4%);
+  background-color: oklch(0% 0 0 / 4%);
 }
 
 .modal-song-artwork {
@@ -1343,12 +1343,12 @@ body {
    ========================================================================== */
 .queue-item-dropdown {
   position: absolute;
-  background-color: oklch(18% 0.02 250 / 96%);
+  background-color: oklch(100% 0 0 / 92%);
   backdrop-filter: blur(20px) saturate(200%);
   -webkit-backdrop-filter: blur(20px) saturate(200%);
   border: 1px solid var(--border-color);
   border-radius: var(--border-radius-md);
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
   z-index: 1000;
   display: flex;
   flex-direction: column;
@@ -1387,7 +1387,7 @@ body {
 }
 
 .dropdown-action-btn:hover {
-  background-color: oklch(100% 0 0 / 6%);
+  background-color: oklch(0% 0 0 / 6%);
 }
 
 .dropdown-action-btn:active {
@@ -1432,7 +1432,7 @@ body {
 .modal-segmented-control {
   position: relative;
   display: flex;
-  background-color: oklch(100% 0 0 / 4%);
+  background-color: oklch(0% 0 0 / 4%);
   border: 1px solid var(--border-color-inner);
   border-radius: var(--border-radius-md);
   padding: 2px;
@@ -1592,6 +1592,6 @@ body {
 .song-row-wrapper .song-item {
   position: relative;
   z-index: 2;
-  background-color: oklch(14% 0.015 250); /* Opaque slate container background to cover red button */
+  background-color: oklch(98% 0.003 250); /* Opaque slate container background to cover red button */
 }
 
