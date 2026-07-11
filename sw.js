@@ -1,4 +1,4 @@
-const CACHE_NAME = 'noirsound-v7';
+const CACHE_NAME = 'noirsound-v8';
 const ASSETS_TO_CACHE = [
   'index.html',
   'app.css',

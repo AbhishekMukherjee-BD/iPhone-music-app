@@ -8,6 +8,12 @@ let tracks = [];
 let queue = [];
 let currentTrackIndex = -1;
 let isPlaying = false;
+
+// Immediate Theme Setup
+const savedTheme = localStorage.getItem('theme') || 'light';
+if (savedTheme === 'dark') {
+  document.body.classList.add('dark-theme');
+}
 let loopMode = 'none'; // 'none' | 'all' | 'single'
 let isShuffleEnabled = false;
 let audioContextUnlocked = false;
@@ -71,6 +77,11 @@ const modalSongsList = document.getElementById('modal-songs-list');
 const btnAbout = document.getElementById('btn-about');
 const btnAboutClose = document.getElementById('btn-about-close');
 const aboutModal = document.getElementById('about-modal');
+
+// Theme Toggle Elements
+const btnThemeToggle = document.getElementById('btn-theme-toggle');
+const themeIconMoon = document.getElementById('theme-icon-moon');
+const themeIconSun = document.getElementById('theme-icon-sun');
 
 // Segmented Controls and Direct Import inside Modal
 const btnChooseImported = document.getElementById('btn-choose-imported');
@@ -1237,6 +1248,21 @@ btnAboutClose.addEventListener('click', () => {
   aboutModal.classList.add('hidden');
 });
 
+btnThemeToggle.addEventListener('click', () => {
+  const isDark = document.body.classList.toggle('dark-theme');
+  localStorage.setItem('theme', isDark ? 'dark' : 'light');
+  
+  if (isDark) {
+    themeIconMoon.classList.add('hidden');
+    themeIconSun.classList.remove('hidden');
+    showToast('Dark Mode Activated');
+  } else {
+    themeIconMoon.classList.remove('hidden');
+    themeIconSun.classList.add('hidden');
+    showToast('Light Mode Activated');
+  }
+});
+
 modalSearchInput.addEventListener('input', (e) => {
   const query = e.target.value.toLowerCase().trim();
   if (!query) {
@@ -1331,6 +1357,15 @@ async function importSongsFromModal(files) {
 
 // App Startup
 window.addEventListener('DOMContentLoaded', async () => {
+  // Sync Theme Icons
+  if (document.body.classList.contains('dark-theme')) {
+    themeIconMoon.classList.add('hidden');
+    themeIconSun.classList.remove('hidden');
+  } else {
+    themeIconMoon.classList.remove('hidden');
+    themeIconSun.classList.add('hidden');
+  }
+
   initMediaSessionActions();
   
   try {
