@@ -55,6 +55,18 @@ const loopSingleIndicator = document.getElementById('loop-single-indicator');
 const volumeSlider = document.getElementById('volume-slider');
 const artworkCard = document.getElementById('artwork-card');
 
+// Queue Elements
+const queueToggleBtn = document.getElementById('btn-queue-toggle');
+const queuePanel = document.getElementById('queue-panel');
+const queueList = document.getElementById('queue-list');
+const queueCount = document.getElementById('queue-count');
+const queueAddBtn = document.getElementById('btn-queue-add');
+const queueCloseBtn = document.getElementById('btn-queue-close');
+const queueSelectModal = document.getElementById('queue-select-modal');
+const modalCloseBtn = document.getElementById('btn-modal-close');
+const modalSearchInput = document.getElementById('modal-search-input');
+const modalSongsList = document.getElementById('modal-songs-list');
+
 // SVG Elements inside Play/Pause Buttons
 const playSvgs = document.querySelectorAll('.play-svg, .play-svg-large');
 const pauseSvgs = document.querySelectorAll('.pause-svg, .pause-svg-large');
@@ -538,10 +550,16 @@ function updatePlaybackUI() {
     playSvgs.forEach(el => el.classList.add('hidden'));
     pauseSvgs.forEach(el => el.classList.remove('hidden'));
     artworkCard.classList.add('playing');
+    if ('mediaSession' in navigator) {
+      navigator.mediaSession.playbackState = 'playing';
+    }
   } else {
     playSvgs.forEach(el => el.classList.remove('hidden'));
     pauseSvgs.forEach(el => el.classList.add('hidden'));
     artworkCard.classList.remove('playing');
+    if ('mediaSession' in navigator) {
+      navigator.mediaSession.playbackState = 'paused';
+    }
   }
 
   // 4. Loop & Shuffle button styles
@@ -556,6 +574,11 @@ function updatePlaybackUI() {
   } else if (loopMode === 'single') {
     loopBtn.classList.add('active');
     loopSingleIndicator.classList.remove('hidden');
+  }
+
+  // 5. Update Queue UI if panel is open
+  if (queuePanel && queuePanel.classList.contains('active')) {
+    renderQueueList();
   }
 }
 
@@ -785,6 +808,250 @@ searchInput.addEventListener('input', (e) => {
   renderSongsList(filtered);
 });
 
+/* ==========================================================================
+   QUEUE MANAGEMENT SYSTEM & TOUCH GESTURES
+   ========================================================================== */
+function renderQueueList() {
+  queueList.innerHTML = '';
+  queueCount.textContent = `${queue.length} ${queue.length === 1 ? 'Song' : 'Songs'}`;
+
+  if (queue.length === 0) {
+    queueList.innerHTML = '<div class="empty-state"><h3>Queue is empty</h3><p>Tap "+" above to add songs.</p></div>';
+    return;
+  }
+
+  queue.forEach((track, index) => {
+    const isCurrent = index === currentTrackIndex;
+    const item = document.createElement('div');
+    item.className = 'queue-item';
+    item.dataset.index = index;
+
+    item.innerHTML = `
+      <span class="queue-item-number">${index + 1}</span>
+      <div class="queue-item-details">
+        <div class="queue-item-title">${escapeHTML(track.title)}</div>
+        <div class="queue-item-artist">${escapeHTML(track.artist)}</div>
+      </div>
+      ${isCurrent ? '<span class="queue-item-playing-badge">Currently Playing</span>' : ''}
+      <div class="queue-item-handle">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+          <line x1="4" y1="9" x2="20" y2="9"></line>
+          <line x1="4" y1="15" x2="20" y2="15"></line>
+        </svg>
+      </div>
+    `;
+
+    // Click to play directly from queue list
+    item.addEventListener('click', (e) => {
+      if (e.target.closest('.queue-item-handle')) return; // ignore handle dragging tap
+      loadAndPlayTrack(index);
+    });
+
+    setupQueueDragEvents(item);
+    queueList.appendChild(item);
+  });
+}
+
+// iOS style Hold (3s) & Drag Reordering
+let dragTimeout = null;
+let isDraggingQueue = false;
+let dragStartIndex = -1;
+let dragActiveElement = null;
+let touchStartY = 0;
+
+function setupQueueDragEvents(item) {
+  item.addEventListener('touchstart', (e) => {
+    const touch = e.touches[0];
+    touchStartY = touch.clientY;
+    dragStartIndex = parseInt(item.dataset.index);
+    dragActiveElement = item;
+
+    if (dragTimeout) clearTimeout(dragTimeout);
+
+    // iOS style 3 seconds hold threshold to drag
+    dragTimeout = setTimeout(() => {
+      isDraggingQueue = true;
+      item.classList.add('held-active');
+      
+      // Haptic physical vibration feedback if available
+      if ('vibrate' in navigator) navigator.vibrate(15);
+
+      document.querySelectorAll('.queue-item').forEach((el, idx) => {
+        if (idx !== dragStartIndex) {
+          el.classList.add('dragging-ghost');
+        }
+      });
+    }, 3000);
+  }, { passive: true });
+
+  item.addEventListener('touchmove', (e) => {
+    if (!dragActiveElement) return;
+    const touch = e.touches[0];
+    const diffY = touch.clientY - touchStartY;
+
+    if (!isDraggingQueue) {
+      // Cancel the hold-to-drag if user moves significant distance before 3s
+      if (Math.abs(diffY) > 8) {
+        clearTimeout(dragTimeout);
+      }
+      return;
+    }
+
+    e.preventDefault(); // Prevent page scroll while dragging
+    dragActiveElement.style.transform = `translateY(${diffY}px) scale(1.04)`;
+  }, { passive: false });
+
+  item.addEventListener('touchend', (e) => {
+    if (dragTimeout) clearTimeout(dragTimeout);
+
+    if (isDraggingQueue) {
+      isDraggingQueue = false;
+      dragActiveElement.classList.remove('held-active');
+      dragActiveElement.style.transform = '';
+
+      document.querySelectorAll('.queue-item').forEach(el => {
+        el.classList.remove('dragging-ghost');
+      });
+
+      const touch = e.changedTouches[0];
+      const hoverEl = getQueueItemUnderPointer(touch.clientX, touch.clientY);
+      if (hoverEl) {
+        const dropIndex = parseInt(hoverEl.dataset.index);
+        if (dropIndex !== dragStartIndex) {
+          reorderQueue(dragStartIndex, dropIndex);
+        }
+      } else {
+        renderQueueList();
+      }
+    }
+
+    dragActiveElement = null;
+    dragStartIndex = -1;
+  });
+}
+
+function getQueueItemUnderPointer(x, y) {
+  if (dragActiveElement) {
+    const prevDisplay = dragActiveElement.style.display;
+    dragActiveElement.style.display = 'none';
+    const el = document.elementFromPoint(x, y);
+    dragActiveElement.style.display = prevDisplay;
+    return el ? el.closest('.queue-item') : null;
+  }
+  return null;
+}
+
+function reorderQueue(fromIndex, toIndex) {
+  const item = queue.splice(fromIndex, 1)[0];
+  queue.splice(toIndex, 0, item);
+
+  if (currentTrackIndex === fromIndex) {
+    currentTrackIndex = toIndex;
+  } else if (fromIndex < currentTrackIndex && toIndex >= currentTrackIndex) {
+    currentTrackIndex--;
+  } else if (fromIndex > currentTrackIndex && toIndex <= currentTrackIndex) {
+    currentTrackIndex++;
+  }
+
+  renderQueueList();
+
+  // If dropped on index 0 (1st position), start playing immediately!
+  if (toIndex === 0) {
+    loadAndPlayTrack(0);
+  }
+
+  showToast('Queue reordered');
+}
+
+function renderModalSongsList(songsToRender) {
+  modalSongsList.innerHTML = '';
+
+  if (songsToRender.length === 0) {
+    modalSongsList.innerHTML = '<div class="empty-state"><p>No songs found</p></div>';
+    return;
+  }
+
+  songsToRender.forEach(track => {
+    const item = document.createElement('div');
+    item.className = 'modal-song-item';
+
+    let artworkImg = `<div class="modal-song-artwork flex-center" style="display:flex;align-items:center;justify-content:center;"><svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16" style="opacity: 0.5;"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg></div>`;
+    if (track.artwork) {
+      artworkImg = `<img src="${track.artwork}" alt="Art" class="modal-song-artwork">`;
+    }
+
+    item.innerHTML = `
+      ${artworkImg}
+      <div class="modal-song-info">
+        <div class="modal-song-title">${escapeHTML(track.title)}</div>
+        <div class="modal-song-artist">${escapeHTML(track.artist)}</div>
+      </div>
+      <button class="btn-modal-add" data-id="${track.id}" aria-label="Add to Queue">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14">
+          <line x1="12" y1="5" x2="12" y2="19"></line>
+          <line x1="5" y1="12" x2="19" y2="12"></line>
+        </svg>
+      </button>
+    `;
+
+    const addBtn = item.querySelector('.btn-modal-add');
+    addBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      addSongToQueueById(track.id);
+    });
+
+    modalSongsList.appendChild(item);
+  });
+}
+
+function addSongToQueueById(trackId) {
+  const song = tracks.find(t => t.id === trackId);
+  if (song) {
+    queue.push(song);
+    renderQueueList();
+    showToast(`Added to Queue: ${song.title}`);
+  }
+}
+
+// Queue panel event bindings
+queueToggleBtn.addEventListener('click', () => {
+  queuePanel.classList.toggle('active');
+  if (queuePanel.classList.contains('active')) {
+    renderQueueList();
+  }
+});
+
+queueCloseBtn.addEventListener('click', () => {
+  queuePanel.classList.remove('active');
+});
+
+queueAddBtn.addEventListener('click', () => {
+  queueAddBtn.classList.add('spinning');
+  setTimeout(() => {
+    queueAddBtn.classList.remove('spinning');
+    queueSelectModal.classList.remove('hidden');
+    renderModalSongsList(tracks);
+    modalSearchInput.value = '';
+  }, 550);
+});
+
+modalCloseBtn.addEventListener('click', () => {
+  queueSelectModal.classList.add('hidden');
+});
+
+modalSearchInput.addEventListener('input', (e) => {
+  const query = e.target.value.toLowerCase().trim();
+  if (!query) {
+    renderModalSongsList(tracks);
+    return;
+  }
+  const filtered = tracks.filter(t => 
+    t.title.toLowerCase().includes(query) || 
+    t.artist.toLowerCase().includes(query)
+  );
+  renderModalSongsList(filtered);
+});
+
 // App Startup
 window.addEventListener('DOMContentLoaded', async () => {
   initMediaSessionActions();
@@ -841,11 +1108,11 @@ function showToast(message) {
   
   container.appendChild(toast);
   
-  // Auto remove toast
+  // Auto remove toast after 2 seconds active + 300ms transition
   setTimeout(() => {
     toast.classList.add('fade-out');
-    toast.addEventListener('transitionend', () => {
+    setTimeout(() => {
       toast.remove();
-    });
-  }, 3000);
+    }, 300);
+  }, 2000);
 }
