@@ -1,8 +1,8 @@
-# AuraPlayer PWA
+# Noir Sound PWA
 
 A premium, custom-built Progressive Web App (PWA) Music Player designed for **iOS Safari** and optimized for **iPhone 11 Pro Max**. 
 
-AuraPlayer allows you to import and play your local MP3 files completely **offline**, integrates with your **iOS Lock Screen & Control Center** (using the Media Session API) for background playback, and comes with two highly-detailed custom user interfaces.
+Noir Sound allows you to import and play your local MP3 files completely **offline**, integrates with your **iOS Lock Screen & Control Center** (using the Media Session API) for background playback, and comes with two highly-detailed custom user interfaces.
 
 ---
 
@@ -34,17 +34,17 @@ python3 -m http.server 8080
 1. In Safari, tap the **Share** button (the square icon with an arrow pointing up at the bottom of the screen).
 2. Scroll down and tap **"Add to Home Screen"**.
 3. Tap **"Add"** in the top right corner.
-4. The **AuraPlayer** icon (a beautiful gold music note logo on carbon fiber texture) will appear on your iPhone home screen.
+4. The **Noir Sound** icon (your new custom image) will appear on your iPhone home screen.
 
 ### Step 4: Import and Play Music Offline
 1. Turn off your Mac if you'd like! You no longer need it.
-2. Open the **AuraPlayer** app from your iPhone's home screen.
+2. Open the **Noir Sound** app from your iPhone's home screen.
 3. Tap the **"Import"** button in the top right.
 4. Select your files:
    * iOS will open the native Files App.
    * Navigate to your **"music"** folder.
    * Tap the **"..."** button in the top right, tap **"Select"**, highlight the MP3 files you want to add, and tap **"Open"**.
-5. AuraPlayer will automatically extract the song title, artist, and album artwork, save them into your iPhone's database, and load them into your offline library!
+5. Noir Sound will automatically extract the song title, artist, and album artwork, save them into your iPhone's database, and load them into your offline library!
 6. Click any song to start playing!
 
 ### Step 5: Toggle Between Interfaces

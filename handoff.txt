@@ -1,5 +1,5 @@
 ========================================================================
-AURAPLAYER PWA MUSIC PLAYER - AGENT HANDOFF DOCUMENT
+NOIR SOUND PWA MUSIC PLAYER - AGENT HANDOFF DOCUMENT
 ========================================================================
 
 SYSTEM STATE & BACKGROUND INFO:
@@ -12,11 +12,11 @@ SYSTEM STATE & BACKGROUND INFO:
 ------------------------------------------------------------------------
 1. ARCHITECTURE OVERVIEW & IMPLEMENTATION DETAILS
 ------------------------------------------------------------------------
-AuraPlayer is built as an offline-first Progressive Web App (PWA). This bypasses the need for the full Xcode development suite while providing a high-fidelity, native-feeling music player on iOS.
+Noir Sound is built as an offline-first Progressive Web App (PWA). This bypasses the need for the full Xcode development suite while providing a high-fidelity, native-feeling music player on iOS.
 
 Core Technical Blocks:
 * Offline Caching (Service Worker): `sw.js` caches all core player assets (index.html, app.css, app.js, manifest.json, local icons, and the jsmediatags CDN script) so the app launches instantly offline.
-* Local Database (IndexedDB): App uses a custom IndexedDB database (`AuraPlayerDB`, store `songs`) in `app.js` to store MP3 audio files as raw binary Blobs. This ensures imported music is persistently stored on the device and remains playable without network access.
+* Local Database (IndexedDB): App uses a custom IndexedDB database (`NoirSoundDB`, store `songs`) in `app.js` to store MP3 audio files as raw binary Blobs. This ensures imported music is persistently stored on the device and remains playable without network access.
 * Metadata Extraction & Fallback: Reads MP3 ID3 tags (title, artist, album art) using the `jsmediatags` library. Convert raw cover art bytes to Base64 strings for persistent storage in IndexedDB. If metadata is missing or fails to parse, it falls back to parsing the filename (e.g. splits "Artist - SongName.mp3" safely).
 * Background Play & Lock Screen (Media Session API): Configured standard HTML5 `<audio>` playback. When playing, it hooks into the native iOS Media Session API, syncing the track title, artist, and cover art to the iOS Lock Screen & Control Center, and routes playback controls (play, pause, skip, prev, seek slider) back to JS event handlers.
 * iOS Gesture Interactions: Implemented touch listeners on the player's drag handle so users can swipe/drag down to dismiss the full-screen player panel.

@@ -1,5 +1,5 @@
 /* ==========================================================================
-   AURAPLAYER ENGINE & OFF-LINE DATABASE
+   NOIR SOUND ENGINE & OFF-LINE DATABASE
    ========================================================================== */
 
 // Global State
@@ -67,6 +67,11 @@ const modalCloseBtn = document.getElementById('btn-modal-close');
 const modalSearchInput = document.getElementById('modal-search-input');
 const modalSongsList = document.getElementById('modal-songs-list');
 
+// About Modal Elements
+const btnAbout = document.getElementById('btn-about');
+const btnAboutClose = document.getElementById('btn-about-close');
+const aboutModal = document.getElementById('about-modal');
+
 // Segmented Controls and Direct Import inside Modal
 const btnChooseImported = document.getElementById('btn-choose-imported');
 const btnImportNew = document.getElementById('btn-import-new');
@@ -85,7 +90,7 @@ const pauseSvgs = document.querySelectorAll('.pause-svg, .pause-svg-large');
    ========================================================================== */
 function initDatabase() {
   return new Promise((resolve, reject) => {
-    const request = indexedDB.open('AuraPlayerDB', 1);
+    const request = indexedDB.open('NoirSoundDB', 1);
 
     request.onerror = (event) => {
       showToast('Database failed to load: ' + event.target.errorCode);
@@ -1222,6 +1227,14 @@ queueAddBtn.addEventListener('click', () => {
 
 modalCloseBtn.addEventListener('click', () => {
   queueSelectModal.classList.add('hidden');
+});
+
+btnAbout.addEventListener('click', () => {
+  aboutModal.classList.remove('hidden');
+});
+
+btnAboutClose.addEventListener('click', () => {
+  aboutModal.classList.add('hidden');
 });
 
 modalSearchInput.addEventListener('input', (e) => {
